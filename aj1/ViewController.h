@@ -24,6 +24,7 @@
     AVCaptureSession *CaptureSession;
     AVCaptureMovieFileOutput *MovieFileOutput;
     AVCaptureDeviceInput *VideoInputDevice;
+    AVCaptureDevice *audioCaptureDevice;
 }
 
 @property (retain) AVCaptureVideoPreviewLayer *PreviewLayer;

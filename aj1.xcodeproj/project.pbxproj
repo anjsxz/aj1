@@ -58,6 +58,13 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		5F0FBC11197225F100C182B5 /* iPad */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = iPad;
+			sourceTree = "<group>";
+		};
 		5F86129819713EE900D67EC7 = {
 			isa = PBXGroup;
 			children = (
@@ -79,6 +86,7 @@
 		5F8612A319713EE900D67EC7 /* aj1 */ = {
 			isa = PBXGroup;
 			children = (
+				5F0FBC11197225F100C182B5 /* iPad */,
 				5F8612A819713EE900D67EC7 /* AppDelegate.h */,
 				5F8612A919713EE900D67EC7 /* AppDelegate.m */,
 				5F8612AB19713EE900D67EC7 /* ViewController.h */,
@@ -336,6 +344,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -348,6 +357,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};

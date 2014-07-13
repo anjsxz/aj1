@@ -35,6 +35,8 @@
     NSLog(@"Adding video input");
     
     //ADD VIDEO INPUT
+    
+    
     AVCaptureDevice *VideoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
     if (VideoDevice)
     {
@@ -59,7 +61,7 @@
     
     //ADD AUDIO INPUT
     NSLog(@"Adding audio input");
-    AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
+    audioCaptureDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
     NSError *error = nil;
     AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:audioCaptureDevice error:&error];
     if (audioInput)
@@ -83,7 +85,7 @@
     NSLog(@"Adding movie file output");
     MovieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
     
-    Float64 TotalSeconds = 120;			//Total seconds
+    Float64 TotalSeconds = 240;			//Total seconds
     int32_t preferredTimeScale = 30;	//Frames per second
     CMTime maxDuration = CMTimeMakeWithSeconds(TotalSeconds, preferredTimeScale);	//<<SET MAX DURATION
     MovieFileOutput.maxRecordedDuration = maxDuration;
@@ -128,15 +130,37 @@
 //    
 //    [[CameraView layer] addSublayer:PreviewLayer];
     
+    [CaptureSession beginConfiguration];		//We can now change the inputs and output configuration.  Use commitConfiguration to end
+    [CaptureSession removeInput:VideoInputDevice];
+    AVCaptureDeviceInput*   NewVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:[self CameraWithPosition:AVCaptureDevicePositionFront] error:&error];
+    if ([CaptureSession canAddInput:NewVideoInput])
+    {
+        [CaptureSession addInput:NewVideoInput];
+        VideoInputDevice = NewVideoInput;
+    }
+    else
+    {
+        [CaptureSession addInput:VideoInputDevice];
+    }
+    
+    //Set the connection properties again
+    [self CameraSetOutputProperties];
+    [CaptureSession commitConfiguration];
     
     //----- START THE CAPTURE SESSION RUNNING -----
     [CaptureSession startRunning];
     [NSTimer scheduledTimerWithTimeInterval:120 target:self selector:@selector(stop) userInfo:nil repeats:NO];
     self.view.backgroundColor = [UIColor blackColor];
+     [CaptureSession startRunning];
+    [self start];
+}
+-(void)start{
+    NSLog(@"start");
+    [MovieFileOutput startRecordingToOutputFileURL:[self genFile] recordingDelegate:self];
 }
 -(void)stop{
-    [self StartStopButtonPressed:nil];
-//     [CaptureSession startRunning];
+    NSLog(@"stop");
+    [MovieFileOutput stopRecording];
 }
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
@@ -171,17 +195,24 @@
     }
     
     //Set frame rate (if requried)
-    CMTimeShow(CaptureConnection.videoMinFrameDuration);
-    CMTimeShow(CaptureConnection.videoMaxFrameDuration);
+//    int fps=60;
+//    [audioCaptureDevice lockForConfiguration:nil];
+//    [audioCaptureDevice setActiveVideoMinFrameDuration:CMTimeMake(1, fps)];
+//    [audioCaptureDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, fps)];
+//    [audioCaptureDevice unlockForConfiguration];
+//    audioCaptureDevice.activeVideoMaxFrameDuration = CMTimeMake(1,fps);
+//    audioCaptureDevice.activeVideoMinFrameDuration =CMTimeMake(1, fps);
+    //    CMTimeShow(CaptureConnection.videoMinFrameDuration);
+    //    CMTimeShow(CaptureConnection.videoMaxFrameDuration);
     
     if (CaptureConnection.supportsVideoMinFrameDuration)
         CaptureConnection.videoMinFrameDuration = CMTimeMake(1, CAPTURE_FRAMES_PER_SECOND);
-        if (CaptureConnection.supportsVideoMaxFrameDuration)
-            CaptureConnection.videoMaxFrameDuration = CMTimeMake(1, CAPTURE_FRAMES_PER_SECOND);
-            
-            CMTimeShow(CaptureConnection.videoMinFrameDuration);
-            CMTimeShow(CaptureConnection.videoMaxFrameDuration);
-            }
+    if (CaptureConnection.supportsVideoMaxFrameDuration)
+        CaptureConnection.videoMaxFrameDuration = CMTimeMake(1, CAPTURE_FRAMES_PER_SECOND);
+    
+    CMTimeShow(CaptureConnection.videoMinFrameDuration);
+    CMTimeShow(CaptureConnection.videoMaxFrameDuration);
+}
 
 //********** GET CAMERA IN SPECIFIED POSITION IF IT EXISTS **********
 - (AVCaptureDevice *) CameraWithPosition:(AVCaptureDevicePosition) Position
@@ -208,7 +239,7 @@
         NSError *error;
         //AVCaptureDeviceInput *videoInput = [self videoInput];
         AVCaptureDeviceInput *NewVideoInput;
-        AVCaptureDevicePosition position = [[VideoInputDevice device] position];
+        AVCaptureDevicePosition position = AVCaptureDevicePositionFront;//[[VideoInputDevice device] position];
         if (position == AVCaptureDevicePositionBack)
         {
             NewVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:[self CameraWithPosition:AVCaptureDevicePositionFront] error:&error];
@@ -257,7 +288,7 @@
         
         //Create temporary URL to record to
 //        NSString *outputPath = [[NSString alloc] initWithFormat:@"%@%@", NSTemporaryDirectory(), @"output.mov"];
-        NSURL *outputURL =  [self genFile];//[[NSURL alloc] initFileURLWithPath:outputPath];
+//        NSURL *outputURL =  [self genFile];//[[NSURL alloc] initFileURLWithPath:outputPath];
 //        NSFileManager *fileManager = [NSFileManager defaultManager];
 //        if ([fileManager fileExistsAtPath:outputPath])
 //        {
@@ -269,7 +300,7 @@
 //        }
 //        [outputPath release];
         //Start recording
-        [MovieFileOutput startRecordingToOutputFileURL:outputURL recordingDelegate:self];
+        [MovieFileOutput startRecordingToOutputFileURL:[self genFile] recordingDelegate:self];
 //        [outputURL release];
     }
     else
@@ -322,6 +353,7 @@ error:(NSError *)error
 //        [library release];		
         
     }
+     [self start];
 }
 
 
