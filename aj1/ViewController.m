@@ -10,6 +10,34 @@
 
 @implementation ViewController
 @synthesize PreviewLayer;
+-(BOOL)shouldAutorotate{
+    return YES;
+}
+//- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+//    return YES;
+//}
+-(BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation {
+    
+    if (interfaceOrientation==UIInterfaceOrientationLandscapeLeft) {
+        PreviewLayer.orientation = AVCaptureVideoOrientationLandscapeLeft;
+    }
+    
+    if (interfaceOrientation==UIInterfaceOrientationLandscapeRight) {
+        PreviewLayer.orientation = AVCaptureVideoOrientationLandscapeRight;
+    }
+    
+    if (interfaceOrientation==UIInterfaceOrientationPortrait) {
+        PreviewLayer.orientation = AVCaptureVideoOrientationLandscapeLeft;
+    }
+    
+    if (interfaceOrientation==UIInterfaceOrientationPortraitUpsideDown) {
+        PreviewLayer.orientation = AVCaptureVideoOrientationPortraitUpsideDown;
+        
+    }
+    
+    return YES;
+    
+}
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -76,7 +104,8 @@
     NSLog(@"Adding video preview layer");
     [self setPreviewLayer:[[AVCaptureVideoPreviewLayer alloc] initWithSession:CaptureSession] ];
     
-    PreviewLayer.orientation = AVCaptureVideoOrientationLandscapeRight;		//<<SET ORIENTATION.  You can deliberatly set this wrong to flip the image and may actually need to set it wrong to get the right image
+    //    PreviewLayer.orientation = AVCaptureVideoOrientationLandscapeRight;		//<<SET ORIENTATION.  You can deliberatly set this wrong to flip the image and may actually need to set it wrong to get the right image
+    
     
     [[self PreviewLayer] setVideoGravity:AVLayerVideoGravityResizeAspectFill];
     
@@ -115,20 +144,20 @@
     
     
     
-//    //----- DISPLAY THE PREVIEW LAYER -----
-//    //Display it full screen under out view controller existing controls
-//    NSLog(@"Display the preview layer");
-//    CGRect layerRect = [[[self view] layer] bounds];
-//    [PreviewLayer setBounds:layerRect];
-//    [PreviewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
-//                                          CGRectGetMidY(layerRect))];
-//    //[[[self view] layer] addSublayer:[[self CaptureManager] previewLayer]];
-//    //We use this instead so it goes on a layer behind our UI controls (avoids us having to manually bring each control to the front):
-//    UIView *CameraView = [[UIView alloc] init] ;
-//    [[self view] addSubview:CameraView];
-//    [self.view sendSubviewToBack:CameraView];
-//    
-//    [[CameraView layer] addSublayer:PreviewLayer];
+    //    //----- DISPLAY THE PREVIEW LAYER -----
+    //    //Display it full screen under out view controller existing controls
+    //    NSLog(@"Display the preview layer");
+    //    CGRect layerRect = [[[self view] layer] bounds];
+    //    [PreviewLayer setBounds:layerRect];
+    //    [PreviewLayer setPosition:CGPointMake(CGRectGetMidX(layerRect),
+    //                                          CGRectGetMidY(layerRect))];
+    //    //[[[self view] layer] addSublayer:[[self CaptureManager] previewLayer]];
+    //    //We use this instead so it goes on a layer behind our UI controls (avoids us having to manually bring each control to the front):
+    //    UIView *CameraView = [[UIView alloc] init] ;
+    //    [[self view] addSubview:CameraView];
+    //    [self.view sendSubviewToBack:CameraView];
+    //
+    //    [[CameraView layer] addSublayer:PreviewLayer];
     
     [CaptureSession beginConfiguration];		//We can now change the inputs and output configuration.  Use commitConfiguration to end
     [CaptureSession removeInput:VideoInputDevice];
@@ -151,7 +180,7 @@
     [CaptureSession startRunning];
     [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(stop) userInfo:nil repeats:NO];
     self.view.backgroundColor = [UIColor blackColor];
-     [CaptureSession startRunning];
+    [CaptureSession startRunning];
     [self start];
 }
 -(void)start{
@@ -162,10 +191,10 @@
     NSLog(@"stop");
     [MovieFileOutput stopRecording];
 }
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return (interfaceOrientation == UIDeviceOrientationLandscapeLeft);
-}
+//- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+//{
+//    return (interfaceOrientation == UIDeviceOrientationLandscapeLeft);
+//}
 
 
 //********** VIEW WILL APPEAR **********
@@ -194,24 +223,7 @@
         [CaptureConnection setVideoOrientation:orientation];
     }
     
-    //Set frame rate (if requried)
-//    int fps=60;
-//    [audioCaptureDevice lockForConfiguration:nil];
-//    [audioCaptureDevice setActiveVideoMinFrameDuration:CMTimeMake(1, fps)];
-//    [audioCaptureDevice setActiveVideoMaxFrameDuration:CMTimeMake(1, fps)];
-//    [audioCaptureDevice unlockForConfiguration];
-//    audioCaptureDevice.activeVideoMaxFrameDuration = CMTimeMake(1,fps);
-//    audioCaptureDevice.activeVideoMinFrameDuration =CMTimeMake(1, fps);
-    //    CMTimeShow(CaptureConnection.videoMinFrameDuration);
-    //    CMTimeShow(CaptureConnection.videoMaxFrameDuration);
-    
-    if (CaptureConnection.supportsVideoMinFrameDuration)
-        CaptureConnection.videoMinFrameDuration = CMTimeMake(1, CAPTURE_FRAMES_PER_SECOND);
-    if (CaptureConnection.supportsVideoMaxFrameDuration)
-        CaptureConnection.videoMaxFrameDuration = CMTimeMake(1, CAPTURE_FRAMES_PER_SECOND);
-    
-    CMTimeShow(CaptureConnection.videoMinFrameDuration);
-    CMTimeShow(CaptureConnection.videoMaxFrameDuration);
+    [self configureCameraForHighestFrameRate:audioCaptureDevice];
 }
 
 //********** GET CAMERA IN SPECIFIED POSITION IF IT EXISTS **********
@@ -239,14 +251,16 @@
         NSError *error;
         //AVCaptureDeviceInput *videoInput = [self videoInput];
         AVCaptureDeviceInput *NewVideoInput;
-        AVCaptureDevicePosition position = AVCaptureDevicePositionFront;//[[VideoInputDevice device] position];
+        AVCaptureDevicePosition position = [[VideoInputDevice device] position];
         if (position == AVCaptureDevicePositionBack)
         {
             NewVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:[self CameraWithPosition:AVCaptureDevicePositionFront] error:&error];
+            [_tap setTitle:@"f" forState:UIControlStateNormal];
         }
         else if (position == AVCaptureDevicePositionFront)
         {
             NewVideoInput = [[AVCaptureDeviceInput alloc] initWithDevice:[self CameraWithPosition:AVCaptureDevicePositionBack] error:&error];
+            [_tap setTitle:@"b" forState:UIControlStateNormal];
         }
         
         if (NewVideoInput != nil)
@@ -268,7 +282,7 @@
             
             
             [CaptureSession commitConfiguration];
-//            [NewVideoInput release];
+            //            [NewVideoInput release];
         }
     }
 }
@@ -287,21 +301,21 @@
         WeAreRecording = YES;
         
         //Create temporary URL to record to
-//        NSString *outputPath = [[NSString alloc] initWithFormat:@"%@%@", NSTemporaryDirectory(), @"output.mov"];
-//        NSURL *outputURL =  [self genFile];//[[NSURL alloc] initFileURLWithPath:outputPath];
-//        NSFileManager *fileManager = [NSFileManager defaultManager];
-//        if ([fileManager fileExistsAtPath:outputPath])
-//        {
-//            NSError *error;
-//            if ([fileManager removeItemAtPath:outputPath error:&error] == NO)
-//            {
-//                //Error - handle if requried
-//            }
-//        }
-//        [outputPath release];
+        //        NSString *outputPath = [[NSString alloc] initWithFormat:@"%@%@", NSTemporaryDirectory(), @"output.mov"];
+        //        NSURL *outputURL =  [self genFile];//[[NSURL alloc] initFileURLWithPath:outputPath];
+        //        NSFileManager *fileManager = [NSFileManager defaultManager];
+        //        if ([fileManager fileExistsAtPath:outputPath])
+        //        {
+        //            NSError *error;
+        //            if ([fileManager removeItemAtPath:outputPath error:&error] == NO)
+        //            {
+        //                //Error - handle if requried
+        //            }
+        //        }
+        //        [outputPath release];
         //Start recording
         [MovieFileOutput startRecordingToOutputFileURL:[self genFile] recordingDelegate:self];
-//        [outputURL release];
+        //        [outputURL release];
     }
     else
     {
@@ -317,8 +331,8 @@
 //********** DID FINISH RECORDING TO OUTPUT FILE AT URL **********
 - (void)captureOutput:(AVCaptureFileOutput *)captureOutput
 didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
-fromConnections:(NSArray *)connections
-error:(NSError *)error
+      fromConnections:(NSArray *)connections
+                error:(NSError *)error
 {
     
     NSLog(@"didFinishRecordingToOutputFileAtURL - enter");
@@ -350,10 +364,10 @@ error:(NSError *)error
              }];
         }
         
-//        [library release];		
+        //        [library release];
         
     }
-     [self start];
+    [self start];
 }
 
 
@@ -362,22 +376,22 @@ error:(NSError *)error
 {
     [super viewDidUnload];
     
-//    [CaptureSession release];
+    //    [CaptureSession release];
     CaptureSession = nil;
-//    [MovieFileOutput release];
+    //    [MovieFileOutput release];
     MovieFileOutput = nil;
-//    [VideoInputDevice release];
+    //    [VideoInputDevice release];
     VideoInputDevice = nil;
 }
 
 //********** DEALLOC **********
 - (void)dealloc
 {
-//    [CaptureSession release];
-//    [MovieFileOutput release];
-//    [VideoInputDevice release];
+    //    [CaptureSession release];
+    //    [MovieFileOutput release];
+    //    [VideoInputDevice release];
     
-//    [super dealloc];
+    //    [super dealloc];
 }
 -(NSURL*)genFile{
     
@@ -390,4 +404,26 @@ error:(NSError *)error
     
     return [NSURL fileURLWithPath:ff];
 }
+- (void)configureCameraForHighestFrameRate:(AVCaptureDevice *)device
+{
+    AVCaptureDeviceFormat *bestFormat = nil;
+    AVFrameRateRange *bestFrameRateRange = nil;
+    for ( AVCaptureDeviceFormat *format in [device formats] ) {
+        for ( AVFrameRateRange *range in format.videoSupportedFrameRateRanges ) {
+            if ( range.maxFrameRate > bestFrameRateRange.maxFrameRate ) {
+                bestFormat = format;
+                bestFrameRateRange = range;
+            }
+        }
+    }
+    if ( bestFormat ) {
+        if ( [device lockForConfiguration:NULL] == YES ) {
+            device.activeFormat = bestFormat;
+            device.activeVideoMinFrameDuration = bestFrameRateRange.minFrameDuration;
+            device.activeVideoMaxFrameDuration = bestFrameRateRange.minFrameDuration;
+            [device unlockForConfiguration];
+        }
+    }
+}
+
 @end

@@ -27,6 +27,7 @@
     AVCaptureDevice *audioCaptureDevice;
 }
 
+@property (weak, nonatomic) IBOutlet UIButton *tap;
 @property (retain) AVCaptureVideoPreviewLayer *PreviewLayer;
 
 - (void) CameraSetOutputProperties;
