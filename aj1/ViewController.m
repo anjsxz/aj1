@@ -85,7 +85,7 @@
     NSLog(@"Adding movie file output");
     MovieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
     
-    Float64 TotalSeconds = 240;			//Total seconds
+    Float64 TotalSeconds = 3600;			//Total seconds
     int32_t preferredTimeScale = 30;	//Frames per second
     CMTime maxDuration = CMTimeMakeWithSeconds(TotalSeconds, preferredTimeScale);	//<<SET MAX DURATION
     MovieFileOutput.maxRecordedDuration = maxDuration;
@@ -149,7 +149,7 @@
     
     //----- START THE CAPTURE SESSION RUNNING -----
     [CaptureSession startRunning];
-    [NSTimer scheduledTimerWithTimeInterval:120 target:self selector:@selector(stop) userInfo:nil repeats:NO];
+    [NSTimer scheduledTimerWithTimeInterval:300 target:self selector:@selector(stop) userInfo:nil repeats:NO];
     self.view.backgroundColor = [UIColor blackColor];
      [CaptureSession startRunning];
     [self start];
